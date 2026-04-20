@@ -7,7 +7,7 @@ using Bark.Networking;
 using Bark.Patches;
 using Bark.Tools;
 using GorillaLibrary;
-using GorillaLibrary.GameModes.Attributes;
+using GorillaLibrary.Attributes;
 using GorillaNetworking;
 using GorillaTagScripts;
 using MelonLoader;
@@ -17,9 +17,11 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
+using Player = GorillaLocomotion.GTPlayer;
 
 [assembly: MelonInfo(typeof(Plugin), "Bark", "1.5.2", "KyleTheScientist")]
 [assembly: MelonGame("Another Axiom", "Gorilla Tag")]
+[assembly: MelonAdditionalDependencies("GorillaLibrary")]
 [assembly: HarmonyDontPatchAll]
 
 namespace Bark;
@@ -91,7 +93,7 @@ public class Plugin : GorillaMod
 
     public override void OnInitializeMelon()
     {
-        Events.Game.OnGameInitialized.Subscribe(OnGameInitialized);
+        Events.Core.OnGameInitialized.Subscribe(OnGameInitialized);
 
         try
         {
