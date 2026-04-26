@@ -19,7 +19,7 @@ using UnityEngine.UI;
 using Object = UnityEngine.Object;
 using Player = GorillaLocomotion.GTPlayer;
 
-[assembly: MelonInfo(typeof(Plugin), "Bark", "1.5.2", "KyleTheScientist")]
+[assembly: MelonInfo(typeof(Plugin), "Bark", "1.5.3", "KyleTheScientist")]
 [assembly: MelonGame("Another Axiom", "Gorilla Tag")]
 [assembly: MelonAdditionalDependencies("GorillaLibrary")]
 [assembly: HarmonyDontPatchAll]
