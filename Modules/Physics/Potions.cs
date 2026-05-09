@@ -3,9 +3,9 @@ using Bark.GUI;
 using Bark.Interaction;
 using Bark.Networking;
 using Bark.Tools;
+using BepInEx.Configuration;
 using GorillaLibrary.Utilities;
 using HarmonyLib;
-using MelonLoader;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -220,14 +220,17 @@ namespace Bark.Modules.Physics
                 "Current size: {0:0.##}x", Player.Instance.scale);
         }
 
-        public static MelonPreferences_Entry<bool> ShowNetworkedSizes;
+        public static ConfigEntry<bool> ShowNetworkedSizes;
         protected override void ReloadConfiguration() { }
 
         public static void BindConfigEntries()
         {
-            MelonPreferences_Category category = Melon<Plugin>.Instance.CreateCategory(DisplayName, DisplayName);
-
-            ShowNetworkedSizes = category.CreateEntry("showNetworkedSize", true, "Show Networked Size", "Whether or not to show how big other players using the Potions module are", false, false, null);
+            ShowNetworkedSizes = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "show networked size",
+                defaultValue: true,
+                description: "Whether or not to show how big other players using the Potions module are"
+            );
         }
         public static void TryGetSizeChangerForRig(VRRig rig, out SizeChanger sc)
         {

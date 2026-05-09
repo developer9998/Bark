@@ -3,9 +3,9 @@ using Bark.GUI;
 using Bark.Interaction;
 using Bark.Patches;
 using Bark.Tools;
+using BepInEx.Configuration;
 using GorillaLibrary.Models;
 using GorillaLibrary.Utilities;
-using MelonLoader;
 using System;
 using UnityEngine;
 using Player = GorillaLocomotion.GTPlayer;
@@ -86,12 +86,15 @@ namespace Bark.Modules.Teleportation
             pearl.throwForceMultiplier = (ThrowForce.Value);
         }
 
-        public static MelonPreferences_Entry<int> ThrowForce;
+        public static ConfigEntry<int> ThrowForce;
         public static void BindConfigEntries()
         {
-            MelonPreferences_Category category = Melon<Plugin>.Instance.CreateCategory(DisplayName, DisplayName);
-
-            ThrowForce = category.CreateEntry<int>("throwForce", 5, "Throw Force", "How much to multiply the throw speed on release", false, false, null);
+            ThrowForce = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "throw force",
+                defaultValue: 5,
+                description: "How much to multiply the throw speed by on release"
+            );
         }
 
         public override string GetDisplayName()

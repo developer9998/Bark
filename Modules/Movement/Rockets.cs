@@ -2,9 +2,9 @@
 using Bark.GUI;
 using Bark.Interaction;
 using Bark.Tools;
+using BepInEx.Configuration;
 using GorillaLibrary.Models;
 using GorillaLibrary.Utilities;
-using MelonLoader;
 using System;
 using UnityEngine;
 using Player = GorillaLocomotion.GTPlayer;
@@ -93,8 +93,8 @@ namespace Bark.Modules.Movement
             Setup();
         }
 
-        public static MelonPreferences_Entry<int> Power;
-        public static MelonPreferences_Entry<int> Volume;
+        public static ConfigEntry<int> Power;
+        public static ConfigEntry<int> Volume;
         protected override void ReloadConfiguration()
         {
             var rockets = new Rocket[] { rocketL?.GetComponent<Rocket>(), rocketR?.GetComponent<Rocket>() };
@@ -108,10 +108,19 @@ namespace Bark.Modules.Movement
 
         public static void BindConfigEntries()
         {
-            MelonPreferences_Category category = Melon<Plugin>.Instance.CreateCategory(DisplayName, DisplayName);
+            Power = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "power",
+                defaultValue: 5,
+                description: "The power of each rocket"
+            );
 
-            Power = category.CreateEntry("power", 5, "Power", "The power of each rocket", false, false, null);
-            Volume = category.CreateEntry("thruster volume", 10, "Thruster Volume", "How loud the thrusters sound", false, false, null);
+            Volume = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "thruster volume",
+                defaultValue: 10,
+                description: "How loud the thrusters sound"
+            );
         }
 
         public override string GetDisplayName()

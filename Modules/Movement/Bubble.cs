@@ -3,8 +3,8 @@ using Bark.GUI;
 using Bark.Interaction;
 using Bark.Networking;
 using Bark.Tools;
+using BepInEx.Configuration;
 using GorillaLocomotion;
-using MelonLoader;
 using System;
 using UnityEngine;
 using NetworkPlayer = NetPlayer;
@@ -157,14 +157,22 @@ namespace Bark.Modules.Movement
             colliderScale = MathExtensions.Map(BubbleSize.Value, 0, 10, .45f, .65f);
         }
 
-        public static MelonPreferences_Entry<int> BubbleSize;
-        public static MelonPreferences_Entry<int> BubbleSpeed;
+        public static ConfigEntry<int> BubbleSize;
+        public static ConfigEntry<int> BubbleSpeed;
         public static void BindConfigEntries()
         {
-            MelonPreferences_Category category = Melon<Plugin>.Instance.CreateCategory(DisplayName, DisplayName);
-
-            BubbleSize = category.CreateEntry("bubble size", 5, "Bubble Size", "How far you have to reach to hit the bubble", false, false, null);
-            BubbleSpeed = category.CreateEntry("bubble speed", 5, "Bubble Speed", "How fast the bubble moves when you push it", false, false, null);
+            BubbleSize = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "bubble size",
+                defaultValue: 5,
+                description: "How far you have to reach to hit the bubble"
+            );
+            BubbleSpeed = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "bubble speed",
+                defaultValue: 5,
+                description: "How fast the bubble moves when you push it"
+            );
         }
 
         public override string GetDisplayName()

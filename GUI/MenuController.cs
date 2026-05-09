@@ -7,8 +7,8 @@ using Bark.Modules.Multiplayer;
 using Bark.Modules.Physics;
 using Bark.Modules.Teleportation;
 using Bark.Tools;
+using BepInEx.Configuration;
 using GorillaLibrary.Models;
-using MelonLoader;
 using Photon.Pun;
 using System;
 using System.Collections.Generic;
@@ -36,8 +36,8 @@ namespace Bark.GUI
         public GameObject modPage, settingsPage;
         public Text helpText;
         public static InputTracker SummonTracker;
-        public static MelonPreferences_Entry<string> SummonInput;
-        public static MelonPreferences_Entry<string> SummonInputHand;
+        public static ConfigEntry<string> SummonInput;
+        public static ConfigEntry<string> SummonInputHand;
         bool docked;
 
         protected override void Awake()
@@ -49,7 +49,7 @@ namespace Bark.GUI
                 base.Awake();
                 this.throwOnDetach = true;
                 gameObject.AddComponent<PositionValidator>();
-                MelonPreferences.OnPreferencesSaved.Subscribe(SettingsChanged);
+                Plugin.configFile.SettingChanged += SettingsChanged;
                 modules =
                 [
                     // Locomotion
@@ -120,9 +120,11 @@ namespace Bark.GUI
             }
         }
 
-        void SettingsChanged(string path)
+        void SettingsChanged(object sender, SettingChangedEventArgs e)
         {
-            if (Path.GetFileName(path) == "Bark.cfg") ReloadConfiguration();
+            if (e.ChangedSetting == SummonInput ||
+                e.ChangedSetting == SummonInputHand)
+                ReloadConfiguration();
         }
 
         void Summon(InputTracker _) { Summon(); }
@@ -182,7 +184,7 @@ namespace Bark.GUI
                 helpText = this.gameObject.transform.Find("Help Canvas").GetComponentInChildren<Text>();
                 helpText.text = "Enable a module to see its tutorial.";
                 this.gameObject.transform.Find("Version Canvas").GetComponentInChildren<Text>().text =
-                    $"{Melon<Plugin>.Instance.Info.Name} {Melon<Plugin>.Instance.Info.Version}";
+                    $"{Plugin.Instance.Info.Metadata.Name} {Plugin.Instance.Info.Metadata.Version}";
 
                 var collider = this.gameObject.GetOrAddComponent<BoxCollider>();
                 collider.isTrigger = true;
@@ -408,17 +410,32 @@ namespace Bark.GUI
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            MelonPreferences.OnPreferencesSaved.Unsubscribe(SettingsChanged);
+            Plugin.configFile.SettingChanged -= SettingsChanged;
         }
 
         public static void BindConfigEntries()
         {
             try
             {
-                MelonPreferences_Category category = Melon<Plugin>.Instance.CreateCategory("general", "General");
+                ConfigDescription inputDesc = new ConfigDescription(
+                    "Which button you press to open the menu",
+                    new AcceptableValueList<string>("gesture", "stick", "a/x", "b/y")
+                );
+                SummonInput = Plugin.configFile.Bind("General",
+                    "open menu",
+                    "gesture",
+                    inputDesc
+                );
 
-                SummonInput = category.CreateEntry("summonInput", "gesture", "open menu", "Which button you press to open the menu (gesture, stick, a/x, b/y)", false, false, new ValueList<string>("gesture", "stick", "a/x", "b/y"));
-                SummonInputHand = category.CreateEntry("summonInputHand", "right", "open hand", "Which hand can open the menu", false, false, new ValueList<string>("left", "right"));
+                ConfigDescription handDesc = new ConfigDescription(
+                    "Which hand can open the menu",
+                    new AcceptableValueList<string>("left", "right")
+                );
+                SummonInputHand = Plugin.configFile.Bind("General",
+                    "open hand",
+                    "right",
+                    handDesc
+                );
             }
             catch (Exception e) { Logging.Exception(e); }
         }

@@ -1,5 +1,6 @@
 ﻿using Bark.GUI;
-using MelonLoader;
+using BepInEx.Logging;
+using GorillaLibrary.Extensions;
 using System;
 using System.Diagnostics;
 
@@ -7,42 +8,41 @@ namespace Bark.Tools
 {
     public static class Logging
     {
-        private static MelonLogger.Instance logger;
-
+        private static ManualLogSource logger;
         public static void Init()
         {
-            logger = Melon<Plugin>.Logger;
+            logger = Plugin.Instance.GetProperty<ManualLogSource>("Logger");
         }
 
         public static void Exception(Exception e)
         {
             var methodInfo = new StackTrace().GetFrame(1).GetMethod();
-            logger.Warning($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join(" ", e.Message, e.StackTrace));
+            logger.LogWarning($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join(" ", e.Message, e.StackTrace));
         }
 
         public static void Fatal(params object[] content)
         {
             var methodInfo = new StackTrace().GetFrame(1).GetMethod();
-            logger.Error($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join(" ", content));
+            logger.LogFatal($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join(" ", content));
         }
 
         public static void Warning(params object[] content)
         {
             var methodInfo = new StackTrace().GetFrame(1).GetMethod();
-            logger.Error($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join(" ", content));
+            logger.LogWarning($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join(" ", content));
         }
 
         public static void Info(params object[] content)
         {
             var methodInfo = new StackTrace().GetFrame(1).GetMethod();
-            logger.Msg($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join(" ", content));
+            logger.LogInfo($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join(" ", content));
 
         }
 
         public static void Debug(params object[] content)
         {
             var methodInfo = new StackTrace().GetFrame(1).GetMethod();
-            logger.Msg($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join("  ", content));
+            logger.LogDebug($"({methodInfo.ReflectedType.Name}.{methodInfo.Name}()) " + string.Join("  ", content));
         }
 
         public static void Debugger(params object[] content)

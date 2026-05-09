@@ -1,7 +1,7 @@
 ﻿using Bark.Extensions;
 using Bark.GUI;
+using BepInEx.Configuration;
 using GorillaLibrary.Utilities;
-using MelonLoader;
 using UnityEngine;
 using Player = GorillaLocomotion.GTPlayer;
 
@@ -59,8 +59,8 @@ namespace Bark.Modules.Movement
             ReloadConfiguration();
         }
 
-        public static MelonPreferences_Entry<int> Speed;
-        public static MelonPreferences_Entry<int> Acceleration;
+        public static ConfigEntry<int> Speed;
+        public static ConfigEntry<int> Acceleration;
         protected override void ReloadConfiguration()
         {
             speedScale = Speed.Value * 2;
@@ -73,10 +73,19 @@ namespace Bark.Modules.Movement
 
         public static void BindConfigEntries()
         {
-            MelonPreferences_Category category = Melon<Plugin>.Instance.CreateCategory(DisplayName, DisplayName);
+            Speed = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "speed",
+                defaultValue: 5,
+                description: "How fast you fly"
+            );
 
-            Speed = category.CreateEntry("speed", 5, "Speed", "How fast you fly", false, false, null);
-            Acceleration = category.CreateEntry("acceleration", 5, "Acceleration", "How fast you accelerate", false, false, null);
+            Acceleration = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "acceleration",
+                defaultValue: 5,
+                description: "How fast you accelerate"
+            );
         }
 
         protected override void Cleanup() { }

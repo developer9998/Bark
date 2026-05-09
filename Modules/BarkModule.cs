@@ -1,9 +1,8 @@
 ﻿using Bark.Networking;
 using Bark.Tools;
-using MelonLoader;
+using BepInEx.Configuration;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -12,7 +11,7 @@ namespace Bark.Modules
 {
     public abstract class BarkModule : MonoBehaviour
     {
-        public List<MelonPreferences_Entry> ConfigEntries;
+        public List<ConfigEntryBase> ConfigEntries;
         public static BarkModule LastEnabled;
         public static Dictionary<string, bool> enabledModules = [];
         public static string enabledModulesKey = "BarkEnabledModules";
@@ -21,9 +20,11 @@ namespace Bark.Modules
 
         public abstract string GetDisplayName();
 
-        protected void SettingsChanged(string path)
+        protected void SettingsChanged(object sender, SettingChangedEventArgs e)
         {
-            if (Path.GetFileName(path) == "Bark.cfg") ReloadConfiguration();
+            foreach (var field in this.GetType().GetFields())
+                if (e.ChangedSetting == field.GetValue(this))
+                    ReloadConfiguration();
         }
 
         public abstract string Tutorial();
@@ -40,16 +41,15 @@ namespace Bark.Modules
         protected virtual void OnEnable()
         {
             LastEnabled = this;
-            MelonPreferences.OnPreferencesSaved.Subscribe(SettingsChanged);
+            Plugin.configFile.SettingChanged += SettingsChanged;
             if (this.button)
                 this.button.IsPressed = true;
-
             SetStatus(true);
         }
 
         protected virtual void OnDisable()
         {
-            MelonPreferences.OnPreferencesSaved.Unsubscribe(SettingsChanged);
+            Plugin.configFile.SettingChanged -= SettingsChanged;
             if (this.button)
                 this.button.IsPressed = false;
             this.Cleanup();

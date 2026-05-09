@@ -4,10 +4,10 @@ using Bark.Interaction;
 using Bark.Modules.Physics;
 using Bark.Networking;
 using Bark.Tools;
+using BepInEx.Configuration;
 using GorillaLibrary.Models;
 using GorillaLocomotion.Climbing;
 using HarmonyLib;
-using MelonLoader;
 using System;
 using UnityEngine;
 using UnityEngine.XR;
@@ -253,19 +253,50 @@ namespace Bark.Modules.Movement
             }
         }
 
-        public static MelonPreferences_Entry<bool> Sticky;
-        public static MelonPreferences_Entry<int> Scale;
-        public static MelonPreferences_Entry<string> Input;
-        public static MelonPreferences_Entry<string> Model;
-
+        public static ConfigEntry<bool> Sticky;
+        public static ConfigEntry<int> Scale;
+        public static ConfigEntry<string> Input;
+        public static ConfigEntry<string> Model;
         public static void BindConfigEntries()
         {
-            MelonPreferences_Category category = Melon<Plugin>.Instance.CreateCategory(DisplayName, DisplayName);
+            try
+            {
+                Sticky = Plugin.configFile.Bind(
+                    section: DisplayName,
+                    key: "sticky",
+                    defaultValue: false,
+                    description: "Whether or not your hands stick to the platforms"
+                );
 
-            Sticky = category.CreateEntry("sticky", false, "Sticky", "Whether or not your hands stick to the platforms", false, false, null);
-            Scale = category.CreateEntry("size", 5, "Size", "The size of the platforms", false, false, null);
-            Input = category.CreateEntry("input", "grip", "Input", "Which button you press to activate the platform", false, false, new ValueList<string>("grip", "trigger", "stick", "a/x", "b/y"));
-            Model = category.CreateEntry("model", "cloud", "Model", "The model chosen to be your platform", false, false, new ValueList<string>("cloud", "storm cloud", "doug", "invisible"));
+                Scale = Plugin.configFile.Bind(
+                    section: DisplayName,
+                    key: "size",
+                    defaultValue: 5,
+                    description: "The size of the platforms"
+                );
+
+                Input = Plugin.configFile.Bind(
+                    section: DisplayName,
+                    key: "input",
+                    defaultValue: "grip",
+                    configDescription: new ConfigDescription(
+                        "Which button you press to activate the platform",
+                        new AcceptableValueList<string>("grip", "trigger", "stick", "a/x", "b/y")
+                    )
+                );
+
+                Model = Plugin.configFile.Bind(
+                    section: DisplayName,
+                    key: "model",
+                    defaultValue: "cloud",
+                    configDescription: new ConfigDescription(
+                        "Which button you press to activate the platform",
+                        new AcceptableValueList<string>("cloud", "storm cloud", "doug", "invisible")
+                    )
+                );
+
+            }
+            catch (Exception e) { Logging.Exception(e); }
         }
 
         public override string GetDisplayName()

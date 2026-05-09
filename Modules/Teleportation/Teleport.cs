@@ -3,7 +3,7 @@ using Bark.GUI;
 using Bark.Interaction;
 using Bark.Patches;
 using Bark.Tools;
-using MelonLoader;
+using BepInEx.Configuration;
 using System;
 using System.Collections;
 using UnityEngine;
@@ -143,13 +143,15 @@ namespace Bark.Modules.Teleportation
             GestureTracker.Instance.OnIlluminati -= OnIlluminati;
         }
 
-        public static MelonPreferences_Entry<int> ChargeTime;
-
+        public static ConfigEntry<int> ChargeTime;
         public static void BindConfigEntries()
         {
-            MelonPreferences_Category category = Melon<Plugin>.Instance.CreateCategory(DisplayName, DisplayName);
-
-            ChargeTime = category.CreateEntry("chargeTime", 5, "Charge Time", "How long it takes t ocharge the teleport", false, false, null);
+            ChargeTime = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "charge time",
+                defaultValue: 5,
+                description: "How long it takes to charge the teleport"
+            );
         }
 
         public override string GetDisplayName()

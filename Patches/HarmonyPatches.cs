@@ -1,4 +1,4 @@
-﻿using MelonLoader;
+﻿using HarmonyLib;
 using System.Reflection;
 
 namespace Bark.Patches
@@ -9,7 +9,7 @@ namespace Bark.Patches
     /// </summary>
     public class HarmonyPatches
     {
-        private static HarmonyLib.Harmony instance;
+        private static Harmony instance;
 
         public static bool IsPatched { get; private set; }
 
@@ -17,7 +17,10 @@ namespace Bark.Patches
         {
             if (!IsPatched)
             {
-                instance ??= new HarmonyLib.Harmony(Melon<Plugin>.Instance.Info.Name);
+                if (instance == null)
+                {
+                    instance = new Harmony("Bark");
+                }
 
                 instance.PatchAll(Assembly.GetExecutingAssembly());
                 IsPatched = true;

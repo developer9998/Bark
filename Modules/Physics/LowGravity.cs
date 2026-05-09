@@ -1,5 +1,5 @@
 ﻿using Bark.GUI;
-using MelonLoader;
+using BepInEx.Configuration;
 using UnityEngine;
 
 namespace Bark.Modules.Physics
@@ -40,12 +40,15 @@ namespace Bark.Modules.Physics
             UnityEngine.Physics.gravity = baseGravity * gravityScale;
         }
 
-        public static MelonPreferences_Entry<int> Multiplier;
+        public static ConfigEntry<int> Multiplier;
         public static void BindConfigEntries()
         {
-            MelonPreferences_Category category = Melon<Plugin>.Instance.CreateCategory(DisplayName, DisplayName);
-
-            Multiplier = category.CreateEntry("multiplier", 2, "Multiplier", "How strong gravity will be (0 = no gravity, 5 = normal gravity, 10 = 2x jupiter gravity)", false, false, null);
+            Multiplier = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "multiplier",
+                defaultValue: 2,
+                description: "How strong gravity will be (0=No gravity, 5=Normal gravity, 10=2x Jupiter Gravity)"
+            );
         }
 
         public override string GetDisplayName()

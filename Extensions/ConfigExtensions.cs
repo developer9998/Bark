@@ -1,7 +1,6 @@
-﻿using Bark.Tools;
-using MelonLoader;
-using System;
+﻿using BepInEx.Configuration;
 using UnityEngine;
+using System;
 
 namespace Bark.Extensions
 {
@@ -13,29 +12,27 @@ namespace Bark.Extensions
             public int InitialValue;
         }
 
-        public static ConfigValueInfo ValuesInfo(this MelonPreferences_Entry entry)
+        public static ConfigValueInfo ValuesInfo(this ConfigEntryBase entry)
         {
-            Type settingType = entry.GetReflectedType();
-
-            if (settingType == typeof(bool))
+            if (entry.SettingType == typeof(bool))
             {
                 return new ConfigValueInfo
                 {
-                    AcceptableValues = [false, true],
+                    AcceptableValues = new object[] { false, true },
                     InitialValue = (bool)entry.BoxedValue ? 1 : 0
                 };
             }
-            else if (settingType == typeof(int))
+            else if (entry.SettingType == typeof(int))
             {
                 return new ConfigValueInfo
                 {
-                    AcceptableValues = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                    InitialValue = Mathf.Clamp((int)entry.BoxedValue, 0, 10)
+                    AcceptableValues = new object[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 },
+                    InitialValue = (int)Mathf.Clamp((int)entry.BoxedValue, 0, 10)
                 };
             }
-            else if (settingType == typeof(string))
+            else if (entry.SettingType == typeof(string))
             {
-                var acceptableValues = ((ValueList<string>)entry.Validator)?.AcceptableValues;
+                var acceptableValues = ((AcceptableValueList<string>)entry.Description.AcceptableValues).AcceptableValues;
                 for (int i = 0; i < acceptableValues.Length; i++)
                 {
                     if (acceptableValues[i] == (string)entry.BoxedValue)
@@ -46,8 +43,7 @@ namespace Bark.Extensions
                         };
                 }
             }
-
-            throw new Exception($"Unknown config type {settingType.FullName}");
+            throw new Exception($"Unknown config type {entry.SettingType}");
         }
     }
 }

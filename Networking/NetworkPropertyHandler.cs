@@ -2,7 +2,6 @@
 using Bark.Tools;
 using ExitGames.Client.Photon;
 using GorillaLibrary.Utilities;
-using MelonLoader;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
@@ -41,10 +40,10 @@ namespace Bark.Networking
 
             PhotonNetwork.NetworkingClient.EventReceived += OnEvent;
 
-            PhotonNetwork.LocalPlayer.SetCustomProperties(new() { { "Bark", Melon<Plugin>.Instance.Info.Version } });
+            PhotonNetwork.LocalPlayer.SetCustomProperties(new() { { Plugin.Instance.Info.Metadata.Name, Plugin.Instance.Info.Metadata.Version } });
 
-            GorillaLibrary.Events.Rig.OnRigAdded.Subscribe(OnRigAdded);
-            GorillaLibrary.Events.Rig.OnRigRemoved.Subscribe(OnRigRemoved);
+            GorillaLibrary.Events.Rig.OnRigAdded += OnRigAdded;
+            GorillaLibrary.Events.Rig.OnRigRemoved += OnRigRemoved;
         }
 
         public void OnRigAdded(VRRig rig, NetPlayer netPlayer)

@@ -3,14 +3,15 @@ using Bark.GUI;
 using Bark.Interaction;
 using Bark.Networking;
 using Bark.Tools;
+using BepInEx.Configuration;
 using GorillaLibrary.Utilities;
-using MelonLoader;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using NetworkPlayer = NetPlayer;
 using Player = GorillaLocomotion.GTPlayer;
+
 namespace Bark.Modules.Multiplayer
 {
     public class BoxingGlove : MonoBehaviour
@@ -202,14 +203,16 @@ namespace Bark.Modules.Multiplayer
             forceMultiplier = (PunchForce.Value) * 5;
         }
 
-        public static MelonPreferences_Entry<int> PunchForce;
+        public static ConfigEntry<int> PunchForce;
         public static void BindConfigEntries()
         {
             Logging.Debug("Binding", DisplayName, "to config");
-
-            MelonPreferences_Category category = Melon<Plugin>.Instance.CreateCategory(DisplayName, DisplayName);
-
-            PunchForce = category.CreateEntry("punch force", 5, "Punch Force", "How much force will be applied to you when punched", false, false, null);
+            PunchForce = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "punch force",
+                defaultValue: 5,
+                description: "How much force will be applied to you when you get punched"
+            );
         }
 
         public override string GetDisplayName()

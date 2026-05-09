@@ -1,9 +1,8 @@
 ﻿using Bark.GUI;
 using Bark.Interaction;
-using Bark.Tools;
+using BepInEx.Configuration;
 using GorillaLibrary.Utilities;
 using GorillaLocomotion;
-using MelonLoader;
 using UnityEngine;
 
 namespace Bark.Modules.Movement
@@ -49,8 +48,8 @@ namespace Bark.Modules.Movement
             GestureTracker.Instance.OnGlide -= OnGlide;
         }
 
-        public static MelonPreferences_Entry<int> Speed;
-        public static MelonPreferences_Entry<string> SteerWith;
+        public static ConfigEntry<int> Speed;
+        public static ConfigEntry<string> SteerWith;
         protected override void ReloadConfiguration()
         {
             speedScale = Speed.Value * 2;
@@ -58,10 +57,22 @@ namespace Bark.Modules.Movement
 
         public static void BindConfigEntries()
         {
-            MelonPreferences_Category category = Melon<Plugin>.Instance.CreateCategory(DisplayName, DisplayName);
+            Speed = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "speed",
+                defaultValue: 5,
+                description: "How fast you fly"
+            );
 
-            Speed = category.CreateEntry("speed", 5, "Speed", "How fast you fly", false, true, null);
-            SteerWith = category.CreateEntry("steerWith", "wrists", "Steer With", "Which part of your body you use to steer", false, false, new ValueList<string>("wrists", "head"));
+            SteerWith = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "steer with",
+                defaultValue: "wrists",
+                configDescription: new ConfigDescription(
+                    "Which part of your body you use to steer",
+                    new AcceptableValueList<string>("wrists", "head")
+                )
+            );
         }
 
         public override string GetDisplayName()

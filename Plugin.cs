@@ -6,12 +6,16 @@ using Bark.Modules;
 using Bark.Networking;
 using Bark.Patches;
 using Bark.Tools;
+using BepInEx;
+using BepInEx.Configuration;
 using GorillaLibrary;
 using GorillaLibrary.Attributes;
 using GorillaNetworking;
 using GorillaTagScripts;
-using MelonLoader;
+using HarmonyLib;
+using Photon.Pun;
 using System;
+using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -19,15 +23,11 @@ using UnityEngine.UI;
 using Object = UnityEngine.Object;
 using Player = GorillaLocomotion.GTPlayer;
 
-[assembly: MelonInfo(typeof(Plugin), "Bark", "1.5.3", "KyleTheScientist")]
-[assembly: MelonGame("Another Axiom", "Gorilla Tag")]
-[assembly: MelonAdditionalDependencies("GorillaLibrary")]
-[assembly: HarmonyDontPatchAll]
-
 namespace Bark;
 
 [ModdedGamemode]
-public class Plugin : GorillaMod
+[BepInPlugin("kylethescientist.bark", "Bark", "1.5.3"), BepInDependency("dev.gorillalibrary")]
+public class Plugin : BaseUnityPlugin
 {
     public static Plugin Instance;
     public static bool initialized, inRoom;
@@ -35,11 +35,11 @@ public class Plugin : GorillaMod
     public static AssetBundle assetBundle;
     public static MenuController menuController;
     public static GameObject monkeMenuPrefab;
-
+    public static ConfigFile configFile;
+    public static bool IsSteam { get; protected set; }
+    public static bool DebugMode { get; protected set; } = false;
     GestureTracker gt;
     NetworkPropertyHandler nph;
-
-    private GameObject _root;
 
 
     public void Setup()
@@ -48,9 +48,9 @@ public class Plugin : GorillaMod
         Logging.Debug("Menu:", menuController, "Plugin Enabled:", pluginEnabled, "InRoom:", inRoom);
         try
         {
-            gt = _root.GetOrAddComponent<GestureTracker>();
-
-            menuController = Object.Instantiate(monkeMenuPrefab).AddComponent<MenuController>();
+            gt = this.gameObject.GetOrAddComponent<GestureTracker>();
+            nph = this.gameObject.GetOrAddComponent<NetworkPropertyHandler>();
+            menuController = Instantiate(monkeMenuPrefab).AddComponent<MenuController>();
         }
         catch (Exception e)
         {
@@ -65,6 +65,7 @@ public class Plugin : GorillaMod
             Logging.Debug("Cleaning up");
             menuController?.gameObject?.Obliterate();
             gt?.Obliterate();
+            nph?.Obliterate();
         }
         catch (Exception e)
         {
@@ -72,13 +73,13 @@ public class Plugin : GorillaMod
         }
     }
 
-    public override void OnEarlyInitializeMelon()
+    void Awake()
     {
         try
         {
             Instance = this;
             Logging.Init();
-
+            configFile = new ConfigFile(Path.Combine(Paths.ConfigPath, "Bark.cfg"), true);
             MenuController.BindConfigEntries();
             Logging.Debug("Found", BarkModule.GetBarkModuleTypes().Count, "modules");
             foreach (Type moduleType in BarkModule.GetBarkModuleTypes())
@@ -91,12 +92,12 @@ public class Plugin : GorillaMod
         catch (Exception e) { Logging.Exception(e); }
     }
 
-    public override void OnInitializeMelon()
+    void Start()
     {
-        Events.Core.OnGameInitialized.Subscribe(OnGameInitialized);
-
         try
         {
+            Logging.Debug("Start");
+            Events.Core.OnGameInitialized += OnGameInitialized;
             assetBundle = Tools.AssetUtils.LoadAssetBundle("Bark/Resources/barkbundle");
             monkeMenuPrefab = assetBundle.LoadAsset<GameObject>("Bark Menu");
         }
@@ -107,95 +108,6 @@ public class Plugin : GorillaMod
     }
 
     public static Text debugText;
-
-    public override void OnMelonEnabled()
-    {
-        try
-        {
-            Logging.Debug("OnEnable");
-            this.pluginEnabled = true;
-            HarmonyPatches.ApplyHarmonyPatches();
-            if (initialized) Setup();
-        }
-        catch (Exception e)
-        {
-            Logging.Exception(e);
-        }
-    }
-
-    public override void OnMelonDisabled()
-    {
-        try
-        {
-            Logging.Debug("OnDisable");
-            this.pluginEnabled = false;
-            HarmonyPatches.RemoveHarmonyPatches();
-            Cleanup();
-        }
-        catch (Exception e)
-        {
-            Logging.Exception(e);
-        }
-    }
-
-    void OnGameInitialized()
-    {
-        try
-        {
-            _root = new GameObject("Bark");
-            Object.DontDestroyOnLoad(_root);
-            nph = _root.GetOrAddComponent<NetworkPropertyHandler>();
-
-            Logging.Debug("OnGameInitialized");
-            initialized = true;
-
-#if DEBUG
-            CreateDebugGUI();
-#endif
-        }
-        catch (Exception ex)
-        {
-            Logging.Exception(ex);
-        }
-    }
-
-    [ModdedGamemodeJoin]
-    void RoomJoined()
-    {
-        Logging.Debug("RoomJoined");
-        inRoom = true;
-        Setup();
-    }
-
-    [ModdedGamemodeLeave]
-    void RoomLeft()
-    {
-        Logging.Debug("RoomLeft");
-        inRoom = false;
-        Cleanup();
-    }
-
-    public async void JoinLobby(string name, string gamemode)
-    {
-        if (FriendshipGroupDetection.Instance.IsInParty)
-        {
-            FriendshipGroupDetection.Instance.LeaveParty();
-            await Task.Delay(1000);
-        }
-
-        await NetworkSystem.Instance.ReturnToSinglePlayer();
-
-        string gamemodeCache = GorillaComputer.instance.currentGameMode.Value;
-        Logging.Debug("Changing gamemode from", gamemodeCache, "to", gamemode);
-        GorillaComputer.instance.SetGameModeWithoutButton(gamemode);
-
-        await PhotonNetworkController.Instance.AttemptToJoinSpecificRoomAsync(name, JoinType.Solo, null);
-
-        GorillaComputer.instance.SetGameModeWithoutButton(gamemodeCache);
-    }
-
-#if DEBUG
-
     void CreateDebugGUI()
     {
         try
@@ -238,5 +150,68 @@ public class Plugin : GorillaMod
         }
     }
 
-#endif
+    void OnEnable()
+    {
+        try
+        {
+            Logging.Debug("OnEnable");
+            this.pluginEnabled = true;
+            HarmonyPatches.ApplyHarmonyPatches();
+            if (initialized)
+                Setup();
+        }
+        catch (Exception e)
+        {
+            Logging.Exception(e);
+        }
+    }
+
+    void OnDisable()
+    {
+        try
+        {
+            Logging.Debug("OnDisable");
+            this.pluginEnabled = false;
+            HarmonyPatches.RemoveHarmonyPatches();
+            Cleanup();
+        }
+        catch (Exception e)
+        {
+            Logging.Exception(e);
+        }
+    }
+
+    void OnGameInitialized()
+    {
+        try
+        {
+            Logging.Debug("OnGameInitialized");
+            initialized = true;
+            string platform = (string)Traverse.Create(GorillaNetworking.PlayFabAuthenticator.instance).Field("platform").GetValue();
+            Logging.Info("Platform: ", platform);
+            IsSteam = platform.ToLower().Contains("steam");
+            if (DebugMode)
+                CreateDebugGUI();
+        }
+        catch (Exception ex)
+        {
+            Logging.Exception(ex);
+        }
+    }
+
+    [ModdedGamemodeJoin]
+    void RoomJoined(string gamemode)
+    {
+        Logging.Debug("RoomJoined");
+        inRoom = true;
+        Setup();
+    }
+
+    [ModdedGamemodeLeave]
+    void RoomLeft(string gamemode)
+    {
+        Logging.Debug("RoomLeft");
+        inRoom = false;
+        Cleanup();
+    }
 }

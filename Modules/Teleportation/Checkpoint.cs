@@ -4,9 +4,9 @@ using Bark.Interaction;
 using Bark.Modules.Physics;
 using Bark.Patches;
 using Bark.Tools;
+using BepInEx.Configuration;
 using GorillaLibrary.Models;
 using GorillaLibrary.Utilities;
-using MelonLoader;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -181,13 +181,15 @@ namespace Bark.Modules.Teleportation
             }
         }
 
-        public static MelonPreferences_Entry<int> ChargeTime;
-
+        public static ConfigEntry<int> ChargeTime;
         public static void BindConfigEntries()
         {
-            MelonPreferences_Category category = Melon<Plugin>.Instance.CreateCategory(DisplayName, DisplayName);
-
-            ChargeTime = category.CreateEntry("chargeTime", 5, "Charge Time", "How long it takes to charge the teleport", false, false, null);
+            ChargeTime = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "charge time",
+                defaultValue: 5,
+                description: "How long it takes to charge the teleport"
+            );
         }
 
         public override string GetDisplayName()

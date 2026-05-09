@@ -1,9 +1,10 @@
-﻿using Bark.Extensions;
+﻿using Bark;
+using Bark.Extensions;
 using Bark.GUI;
 using Bark.Interaction;
 using Bark.Modules;
 using Bark.Tools;
-using MelonLoader;
+using BepInEx.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,7 @@ public class SettingsPage : MonoBehaviour
 {
     BarkOptionWheel modSelector, configSelector;
     BarkSlider valueSlider;
-    MelonPreferences_Entry entry;
+    ConfigEntryBase entry;
 
     void Awake()
     {
@@ -49,29 +50,21 @@ public class SettingsPage : MonoBehaviour
             valueSlider.OnValueChanged += (value) =>
             {
                 entry.BoxedValue = value;
-                entry.Category.SaveToFile();
             };
 
         }
         catch (Exception e) { Logging.Exception(e); }
     }
 
-    MelonPreferences_Entry GetEntry(string modName, string key)
+    ConfigEntryBase GetEntry(string modName, string key)
     {
-        foreach (var category in MelonPreferences.Categories)
+        foreach (var definition in Plugin.configFile.Keys)
         {
-            if (category.Identifier == modName || category.DisplayName == modName)
+            if (definition.Section == modName && definition.Key == key)
             {
-                foreach (var entry in category.Entries)
-                {
-                    if (entry.Identifier == key || entry.DisplayName == key)
-                    {
-                        return entry;
-                    }
-                }
+                return Plugin.configFile[definition];
             }
         }
-
         throw new Exception($"Could not find config entry for {modName} with key {key}");
     }
 
@@ -79,15 +72,15 @@ public class SettingsPage : MonoBehaviour
     {
         try
         {
-            foreach (var category in MelonPreferences.Categories)
+            List<string> configKeys = new List<string>();
+            foreach (var definition in Plugin.configFile.Keys)
             {
-                if (category.Identifier == modName || category.DisplayName == modName)
+                if (definition.Section == modName)
                 {
-                    return [.. category.Entries.Select(entry => entry.DisplayName)];
+                    configKeys.Add(Plugin.configFile[definition].Definition.Key);
                 }
             }
-
-            return null;
+            return configKeys;
         }
         catch (Exception e)
         {
@@ -100,7 +93,7 @@ public class SettingsPage : MonoBehaviour
     {
         try
         {
-            List<string> modulesWithSettings = ["General"];
+            List<string> modulesWithSettings = new List<string>() { "General" };
             foreach (var type in BarkModule.GetBarkModuleTypes())
             {
                 if (type == typeof(BarkModule)) continue;
@@ -126,8 +119,8 @@ public class SettingsPage : MonoBehaviour
         MenuController.Instance.helpText.text =
             $"{modSelector.Selected} > {configSelector.Selected}\n" +
             "-----------------------------------\n" +
-            entry.Description +
-            $"\n\nDefault: {entry.GetDefaultValueAsString()}";
+            entry.Description.Description +
+            $"\n\nDefault: {entry.DefaultValue}";
     }
 }
 

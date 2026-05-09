@@ -3,11 +3,11 @@ using Bark.GUI;
 using Bark.Interaction;
 using Bark.Modules.Teleportation;
 using Bark.Tools;
+using BepInEx.Configuration;
 using GorillaLibrary.Models;
 using GorillaLocomotion.Climbing;
 using GorillaLocomotion.Gameplay;
 using HarmonyLib;
-using MelonLoader;
 using System;
 using UnityEngine;
 using UnityEngine.XR;
@@ -280,10 +280,9 @@ namespace Bark.Modules.Movement
                 zipline?.Obliterate();
         }
 
-        public static MelonPreferences_Entry<int> MaxZiplines;
-        public static MelonPreferences_Entry<string> LauncherHand;
-        public static MelonPreferences_Entry<int> GravityMultiplier;
-
+        public static ConfigEntry<int> MaxZiplines;
+        public static ConfigEntry<string> LauncherHand;
+        public static ConfigEntry<int> GravityMultiplier;
         protected override void ReloadConfiguration()
         {
             settings.gravityMulti = GravityMultiplier.Value / 5f;
@@ -350,13 +349,29 @@ namespace Bark.Modules.Movement
 
         public static void BindConfigEntries()
         {
-            MelonPreferences_Category category = Melon<Plugin>.Instance.CreateCategory(DisplayName, DisplayName);
+            MaxZiplines = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "max ziplines",
+                defaultValue: 3,
+                description: "Maximum number of ziplines that can exist at one time"
+            );
 
-            MaxZiplines = category.CreateEntry("max ziplines", 3, "Max Ziplines", "Maximum number of ziplines that can exist at one time", false, false, null);
+            LauncherHand = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "launcher hand",
+                defaultValue: "right",
+                configDescription: new ConfigDescription(
+                    "Which hand holds the launcher",
+                    new AcceptableValueList<string>("left", "right")
+                )
+            );
 
-            LauncherHand = category.CreateEntry("launcher hand", "right", "Launcher Hand", "Which hand holds the launcher", false, false, new ValueList<string>("left", "right"));
-
-            GravityMultiplier = category.CreateEntry("gravity multiplier", 5, "Gravity Multiplier", "Gravity multiplier while on the zipline", false, false, null);
+            GravityMultiplier = Plugin.configFile.Bind(
+                section: DisplayName,
+                key: "gravity multiplier",
+                defaultValue: 5,
+                description: "Gravity multiplier while on the zipline"
+            );
         }
 
         public override string GetDisplayName()
