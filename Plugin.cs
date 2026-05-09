@@ -10,6 +10,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using GorillaLibrary;
 using GorillaLibrary.Attributes;
+using GorillaLibrary.Utilities;
 using GorillaNetworking;
 using GorillaTagScripts;
 using HarmonyLib;
@@ -187,7 +188,7 @@ public class Plugin : BaseUnityPlugin
         {
             Logging.Debug("OnGameInitialized");
             initialized = true;
-            string platform = (string)Traverse.Create(GorillaNetworking.PlayFabAuthenticator.instance).Field("platform").GetValue();
+            string platform = CoreUtility.Platform;
             Logging.Info("Platform: ", platform);
             IsSteam = platform.ToLower().Contains("steam");
             if (DebugMode)
