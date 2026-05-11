@@ -1,5 +1,4 @@
-﻿using Bark;
-using Bark.Extensions;
+﻿using Bark.Extensions;
 using Bark.GUI;
 using Bark.Interaction;
 using Bark.Modules;
@@ -11,17 +10,11 @@ using BepInEx.Configuration;
 using GorillaLibrary;
 using GorillaLibrary.Attributes;
 using GorillaLibrary.Utilities;
-using GorillaNetworking;
-using GorillaTagScripts;
-using HarmonyLib;
-using Photon.Pun;
 using System;
 using System.IO;
 using System.Reflection;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
-using Object = UnityEngine.Object;
 using Player = GorillaLocomotion.GTPlayer;
 
 namespace Bark;
