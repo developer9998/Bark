@@ -20,7 +20,7 @@ using Player = GorillaLocomotion.GTPlayer;
 namespace Bark;
 
 [ModdedGamemode]
-[BepInPlugin("kylethescientist.bark", "Bark", "1.5.3"), BepInDependency("dev.gorillalibrary")]
+[BepInPlugin("kylethescientist.bark", "Bark", "1.5.4"), BepInDependency("dev.gorillalibrary")]
 public class Plugin : BaseUnityPlugin
 {
     public static Plugin Instance;
